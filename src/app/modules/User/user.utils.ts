@@ -8,12 +8,8 @@ export const findLastUserId = async () => {
 };
 
 export const generateUserId = async () => {
-  const currentUserId =
-    (await findLastUserId()) || (0).toString().padStart(5, '0');
-
-  const incrementedId = parseInt(currentUserId + 1)
-    .toString()
-    .padStart(5, '0');
-
+  const currentId = (await findLastUserId()) || (0).toString().padStart(5, '0'); //00000
+  //increment by 1
+  const incrementedId = (parseInt(currentId) + 1).toString().padStart(5, '0');
   return incrementedId;
 };

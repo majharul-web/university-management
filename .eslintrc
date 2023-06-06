@@ -12,7 +12,7 @@
   ],
   "rules": {
     "no-unused-vars": "error",
-    "prefer-const": "error",
+    "prefer-const": "warn",
     "no-unused-expressions": "error",
     "no-undef": "error",
     "no-console": "warn",

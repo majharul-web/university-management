@@ -13,8 +13,8 @@ app.use(express.json());
 app.use('/api/v1/users', UserRoutes);
 
 // test error
-app.get('/', () => {
-  Promise.reject(new Error('Unhandled promise rejection'));
+app.get('/', async () => {
+  // Promise.reject(new Error('Unhandled promise rejection'));
   // throw new ApiError(400, 'Something went wrong');
   // next('something went wrong');
   // throw new Error('Something went wrong');

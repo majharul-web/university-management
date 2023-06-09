@@ -24,7 +24,4 @@ export type IAcademicSemester = {
   endMonth: IAcademicSemesterMonth;
 };
 
-export type AcademicSemesterModel = Model<
-  IAcademicSemester,
-  Record<string, unknown>
->;
+export type AcademicSemesterModel = Model<IAcademicSemester>;

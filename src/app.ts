@@ -1,8 +1,8 @@
-import express, { Application } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import globalErrorHandler from './app/middlewares/globalErrorHandler';
-import { UserRoutes } from './app/modules/User/user.route';
-import { AcademicSemesterRoutes } from './app/modules/AcademicSemester/academicSemester.route';
+import routes from './app/routes';
+import httpStatus from 'http-status';
 
 const app: Application = express();
 
@@ -12,8 +12,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 // Routes
-app.use('/api/v1/users', UserRoutes);
-app.use('/api/v1/academic-semester', AcademicSemesterRoutes);
+// app.use('/api/v1/users', UserRoutes);
+// app.use('/api/v1/academic-semester', AcademicSemesterRoutes);
+app.use('/api/v1/', routes);
 
 // test error
 app.get('/', async () => {
@@ -25,5 +26,20 @@ app.get('/', async () => {
 
 // Error handler
 app.use(globalErrorHandler);
+
+// handle not found routes
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.status(httpStatus.NOT_FOUND).json({
+    success: false,
+    message: 'Not found',
+    errorMessages: [
+      {
+        path: req.originalUrl,
+        message: 'API not found',
+      },
+    ],
+  });
+  next();
+});
 
 export default app;

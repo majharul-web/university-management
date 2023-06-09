@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { IGenericErrorMessage } from '../app/interfaces/error';
-import { IGenericErrorResponse } from '../app/interfaces/common';
+import { IGenericErrorResponse } from '../interfaces/common';
+import { IGenericErrorMessage } from '../interfaces/error';
 
 const handleValidationError = (
   error: mongoose.Error.ValidationError

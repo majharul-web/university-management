@@ -4,7 +4,7 @@ type IApiResponse<T> = {
   statusCode: number;
   success: boolean;
   message?: string | null;
-  meta: {
+  meta?: {
     total: number;
     page: number;
     limit: number;

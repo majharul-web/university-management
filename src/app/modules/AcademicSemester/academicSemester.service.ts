@@ -84,7 +84,16 @@ const getAllSemesters = async (
   };
 };
 
+const getSingleSemester = async (id: string): Promise<IAcademicSemester> => {
+  const result = await AcademicSemester.findById(id);
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Semester not found');
+  }
+  return result;
+};
+
 export const AcademicSemesterService = {
   createSemester,
   getAllSemesters,
+  getSingleSemester,
 };

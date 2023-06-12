@@ -12,6 +12,8 @@ router.post(
 );
 
 router.get('/:id', AcademicFacultyController.getAcademicFacultyById);
+router.patch('/:id', AcademicFacultyController.updateAcademicFaculty);
+router.delete('/:id', AcademicFacultyController.deleteAcademicFaculty);
 
 router.get('/', AcademicFacultyController.getAllAcademicFaculties);
 

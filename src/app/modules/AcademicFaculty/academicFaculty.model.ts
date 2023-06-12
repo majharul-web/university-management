@@ -6,7 +6,7 @@ import {
 import ApiError from '../../../errors/ApiError';
 import httpStatus from 'http-status';
 
-const academicFacultySchema = new Schema(
+const academicFacultySchema = new Schema<IAcademicFaculty>(
   {
     title: {
       type: String,

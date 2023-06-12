@@ -5,7 +5,7 @@ import { CastError } from 'mongoose';
 const handleCastError = (error: CastError): IGenericErrorResponse => {
   const errors: IGenericErrorMessage[] = [
     {
-      path: error?.path,
+      path: error.path,
       message: 'Invalid Id',
     },
   ];

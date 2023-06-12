@@ -40,7 +40,7 @@ export const academicSemesterSearchableFields: string[] = [
   'code',
   'year',
 ];
-export const academicSemesterFilterFields: string[] = [
+export const academicSemesterFilterAbleFields: string[] = [
   'searchTerm',
   ...academicSemesterSearchableFields,
 ];

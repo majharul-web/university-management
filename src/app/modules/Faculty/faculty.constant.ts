@@ -17,4 +17,5 @@ export const facultyFilterableFields = [
   'email',
   'contactNo',
   'emergencyContactNo',
+  'designation',
 ];

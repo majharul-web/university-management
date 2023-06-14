@@ -4,15 +4,15 @@ import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
-import { studentSearchableFields } from './faculty.constant';
-import { IStudent, IStudentFilters } from './faculty.interface';
-import { Student } from './faculty.model';
+import { IFaculty, IFacultyFilters } from './faculty.interface';
+import { Faculty } from './faculty.model';
 import { paginationHelper } from '../../../helpers/paginationHelper';
+import { facultySearchableFields } from './faculty.constant';
 
-const getAllStudents = async (
-  filters: IStudentFilters,
+const getAllFaculties = async (
+  filters: IFacultyFilters,
   paginationOptions: IPaginationOptions
-): Promise<IGenericResponse<IStudent[]>> => {
+): Promise<IGenericResponse<IFaculty[]>> => {
   const { searchTerm, ...filtersData } = filters;
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(paginationOptions);
@@ -21,7 +21,7 @@ const getAllStudents = async (
 
   if (searchTerm) {
     andConditions.push({
-      $or: studentSearchableFields.map(field => ({
+      $or: facultySearchableFields.map(field => ({
         [field]: {
           $regex: searchTerm,
           $options: 'i',
@@ -46,15 +46,14 @@ const getAllStudents = async (
   const whereConditions =
     andConditions.length > 0 ? { $and: andConditions } : {};
 
-  const result = await Student.find(whereConditions)
-    .populate('academicSemester')
+  const result = await Faculty.find(whereConditions)
     .populate('academicDepartment')
     .populate('academicFaculty')
     .sort(sortConditions)
     .skip(skip)
     .limit(limit);
 
-  const total = await Student.countDocuments(whereConditions);
+  const total = await Faculty.countDocuments(whereConditions);
 
   return {
     meta: {
@@ -66,27 +65,26 @@ const getAllStudents = async (
   };
 };
 
-const getSingleStudent = async (id: string): Promise<IStudent | null> => {
-  const result = await Student.findOne({ id })
-    .populate('academicSemester')
+const getSingleFaculty = async (id: string): Promise<IFaculty | null> => {
+  const result = await Faculty.findOne({ id })
     .populate('academicDepartment')
     .populate('academicFaculty');
   return result;
 };
 
-const updateStudent = async (
+const updateFaculty = async (
   id: string,
-  payload: Partial<IStudent>
-): Promise<IStudent | null> => {
-  const isExist = await Student.findOne({ id });
+  payload: Partial<IFaculty>
+): Promise<IFaculty | null> => {
+  const isExist = await Faculty.findOne({ id });
 
   if (!isExist) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Student not found !');
+    throw new ApiError(httpStatus.NOT_FOUND, 'Faculty not found !');
   }
 
-  const { name, guardian, localGuardian, ...studentData } = payload;
+  const { name, ...facultyData } = payload;
 
-  const updatedStudentData: Partial<IStudent> = { ...studentData };
+  const updatedFacultyData: Partial<IFaculty> = { ...facultyData };
 
   /* const name ={
     fisrtName: 'Mezba',  <----- update korar jnno
@@ -99,44 +97,27 @@ const updateStudent = async (
 
   if (name && Object.keys(name).length > 0) {
     Object.keys(name).forEach(key => {
-      const nameKey = `name.${key}` as keyof Partial<IStudent>; // `name.fisrtName`
-      (updatedStudentData as any)[nameKey] = name[key as keyof typeof name];
-    });
-  }
-  if (guardian && Object.keys(guardian).length > 0) {
-    Object.keys(guardian).forEach(key => {
-      const guardianKey = `guardian.${key}` as keyof Partial<IStudent>; // `guardian.fisrtguardian`
-      (updatedStudentData as any)[guardianKey] =
-        guardian[key as keyof typeof guardian]; // updatedStudentData['guardian.motherContactNo']=guardian[motherContactNo]
-      // updatedStudentData --> object create --> guardian : { motherContactNo: 0177}
-    });
-  }
-  if (localGuardian && Object.keys(localGuardian).length > 0) {
-    Object.keys(localGuardian).forEach(key => {
-      const localGuradianKey =
-        `localGuardian.${key}` as keyof Partial<IStudent>; // `localGuardian.fisrtName`
-      (updatedStudentData as any)[localGuradianKey] =
-        localGuardian[key as keyof typeof localGuardian];
+      const nameKey = `name.${key}` as keyof Partial<IFaculty>; // `name.fisrtName`
+      (updatedFacultyData as any)[nameKey] = name[key as keyof typeof name];
     });
   }
 
-  const result = await Student.findOneAndUpdate({ id }, updatedStudentData, {
+  const result = await Faculty.findOneAndUpdate({ id }, updatedFacultyData, {
     new: true,
   });
   return result;
 };
 
-const deleteStudent = async (id: string): Promise<IStudent | null> => {
-  const result = await Student.findOneAndDelete({ id })
-    .populate('academicSemester')
+const deleteFaculty = async (id: string): Promise<IFaculty | null> => {
+  const result = await Faculty.findOneAndDelete({ id })
     .populate('academicDepartment')
     .populate('academicFaculty');
   return result;
 };
 
-export const StudentService = {
-  getAllStudents,
-  getSingleStudent,
-  updateStudent,
-  deleteStudent,
+export const FacultyService = {
+  getAllFaculties,
+  getSingleFaculty,
+  updateFaculty,
+  deleteFaculty,
 };

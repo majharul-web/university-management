@@ -1,13 +1,13 @@
-import httpStatus from 'http-status';
 import { Request, Response } from 'express';
-import { UserService } from './user.service';
+import httpStatus from 'http-status';
+import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 import { IUser } from './user.interface';
-import catchAsync from '../../../shared/catchAsync';
+import { UserService } from './user.service';
 
-const createUser = catchAsync(async (req: Request, res: Response) => {
-  const user = req.body;
-  const result = await UserService.createUser(user);
+const createStudent = catchAsync(async (req: Request, res: Response) => {
+  const { student, ...userData } = req.body;
+  const result = await UserService.createStudent(student, userData);
 
   sendResponse<IUser>(res, {
     statusCode: httpStatus.OK,
@@ -18,5 +18,5 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const UserController = {
-  createUser,
+  createStudent,
 };

@@ -12,7 +12,7 @@ router.delete('/:id', FacultyController.deleteFaculty);
 
 router.patch(
   '/:id',
-  validateRequest(FacultyValidation.updateStudentZodSchema),
+  validateRequest(FacultyValidation.updateFacultyZodSchema),
   FacultyController.updateFaculty
 );
 

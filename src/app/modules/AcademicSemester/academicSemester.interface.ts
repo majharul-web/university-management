@@ -1,4 +1,3 @@
-import { IAcademicSemester } from './academicSemester.interface';
 import { Model } from 'mongoose';
 export type IAcademicSemesterMonth =
   | 'January'

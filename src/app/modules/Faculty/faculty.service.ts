@@ -8,6 +8,8 @@ import { IFaculty, IFacultyFilters } from './faculty.interface';
 import { Faculty } from './faculty.model';
 import { paginationHelper } from '../../../helpers/paginationHelper';
 import { facultySearchableFields } from './faculty.constant';
+import mongoose from 'mongoose';
+import { User } from '../User/user.model';
 
 const getAllFaculties = async (
   filters: IFacultyFilters,
@@ -109,10 +111,32 @@ const updateFaculty = async (
 };
 
 const deleteFaculty = async (id: string): Promise<IFaculty | null> => {
-  const result = await Faculty.findOneAndDelete({ id })
-    .populate('academicDepartment')
-    .populate('academicFaculty');
-  return result;
+  // check if the faculty is exist
+  const isExist = await Faculty.findOne({ id });
+
+  if (!isExist) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Faculty not found !');
+  }
+
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+    //delete faculty first
+    const faculty = await Faculty.findOneAndDelete({ id }, { session });
+    if (!faculty) {
+      throw new ApiError(404, 'Failed to delete student');
+    }
+    //delete user
+    await User.deleteOne({ id });
+    session.commitTransaction();
+    session.endSession();
+
+    return faculty;
+  } catch (error) {
+    session.abortTransaction();
+    throw error;
+  }
 };
 
 export const FacultyService = {

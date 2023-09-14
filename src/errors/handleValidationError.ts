@@ -8,12 +8,11 @@ const handleValidationError = (
   const errors: IGenericErrorMessage[] = Object.values(error.errors).map(
     (el: mongoose.Error.ValidatorError | mongoose.Error.CastError) => {
       return {
-        path: el.path,
-        message: el.message,
+        path: el?.path,
+        message: el?.message,
       };
     }
   );
-
   const statusCode = 400;
   return {
     statusCode,

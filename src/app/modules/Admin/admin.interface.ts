@@ -1,5 +1,5 @@
 import { Model, Types } from 'mongoose';
-import { IManagementDepartment } from '../ManagementDepartment/managementDepartment.interface';
+import { IManagementDepartment } from '../managementDepartment/managementDepartment.inerface';
 
 export type UserName = {
   firstName: string;
@@ -9,18 +9,18 @@ export type UserName = {
 
 export type IAdmin = {
   id: string;
-  name: UserName; //embedded object
-  dateOfBirth: string;
-  gender: 'male' | 'female';
-  bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+  name: UserName;
+  profileImage: string;
+  dateOfBirth?: string;
   email: string;
   contactNo: string;
   emergencyContactNo: string;
-  presentAddress: string;
-  permanentAddress: string;
+  gender?: 'male' | 'female';
+  permanentAddress?: string;
+  presentAddress?: string;
+  bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+  managementDepartment: Types.ObjectId | IManagementDepartment;
   designation: string;
-  managementDepartment: Types.ObjectId | IManagementDepartment; // // reference _id
-  profileImage?: string;
 };
 
 export type AdminModel = Model<IAdmin, Record<string, unknown>>;
@@ -28,8 +28,11 @@ export type AdminModel = Model<IAdmin, Record<string, unknown>>;
 export type IAdminFilters = {
   searchTerm?: string;
   id?: string;
-  bloodGroup?: string;
   email?: string;
   contactNo?: string;
   emergencyContactNo?: string;
+  gender?: 'male' | 'female';
+  bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+  managementDepartment?: string;
+  designation?: string;
 };

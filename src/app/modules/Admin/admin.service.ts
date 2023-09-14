@@ -1,26 +1,32 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { SortOrder } from 'mongoose';
+import httpStatus from 'http-status';
+import mongoose, { SortOrder } from 'mongoose';
+import ApiError from '../../../errors/ApiError';
+import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
-import httpStatus from 'http-status';
-import ApiError from '../../../errors/ApiError';
+import { User } from '../user/user.model';
+import { adminSearchableFields } from './admin.constant';
 import { IAdmin, IAdminFilters } from './admin.interface';
 import { Admin } from './admin.model';
-import { paginationHelper } from '../../../helpers/paginationHelper';
-import { adminSearchableFields } from './admin.constant';
-import { User } from '../User/user.model';
-import mongoose from 'mongoose';
+
+const getSingleAdmin = async (id: string): Promise<IAdmin | null> => {
+  const result = await Admin.findOne({ id }).populate('managementDepartment');
+  return result;
+};
 
 const getAllAdmins = async (
   filters: IAdminFilters,
   paginationOptions: IPaginationOptions
 ): Promise<IGenericResponse<IAdmin[]>> => {
+  // Extract searchTerm to implement search query
   const { searchTerm, ...filtersData } = filters;
   const { page, limit, skip, sortBy, sortOrder } =
-    paginationHelper.calculatePagination(paginationOptions);
+    paginationHelpers.calculatePagination(paginationOptions);
 
   const andConditions = [];
 
+  // Search needs $or for searching in specified fields
   if (searchTerm) {
     andConditions.push({
       $or: adminSearchableFields.map(field => ({
@@ -32,6 +38,7 @@ const getAllAdmins = async (
     });
   }
 
+  // Filters needs $and to fullfill all the conditions
   if (Object.keys(filtersData).length) {
     andConditions.push({
       $and: Object.entries(filtersData).map(([field, value]) => ({
@@ -40,11 +47,13 @@ const getAllAdmins = async (
     });
   }
 
+  // Dynamic sort needs  fields to  do sorting
   const sortConditions: { [key: string]: SortOrder } = {};
-
   if (sortBy && sortOrder) {
     sortConditions[sortBy] = sortOrder;
   }
+
+  // If there is no condition , put {} to give all data
   const whereConditions =
     andConditions.length > 0 ? { $and: andConditions } : {};
 
@@ -66,12 +75,6 @@ const getAllAdmins = async (
   };
 };
 
-const getSingleAdmin = async (id: string): Promise<IAdmin | null> => {
-  const result = await Admin.findOne({ id }).populate('managementDepartment');
-
-  return result;
-};
-
 const updateAdmin = async (
   id: string,
   payload: Partial<IAdmin>
@@ -84,25 +87,16 @@ const updateAdmin = async (
 
   const { name, ...adminData } = payload;
 
-  const updatedAdminData: Partial<IAdmin> = { ...adminData };
-
-  /* const name ={
-    fisrtName: 'Mezba',  <----- update korar jnno
-    middleName:'Abedin',
-    lastName: 'Forhan'
-  }
-*/
-
-  // dynamically handling
+  const updatedStudentData: Partial<IAdmin> = { ...adminData };
 
   if (name && Object.keys(name).length > 0) {
     Object.keys(name).forEach(key => {
-      const nameKey = `name.${key}` as keyof Partial<IAdmin>; // `name.fisrtName`
-      (updatedAdminData as any)[nameKey] = name[key as keyof typeof name];
+      const nameKey = `name.${key}` as keyof Partial<IAdmin>;
+      (updatedStudentData as any)[nameKey] = name[key as keyof typeof name];
     });
   }
 
-  const result = await Admin.findOneAndUpdate({ id }, updatedAdminData, {
+  const result = await Admin.findOneAndUpdate({ id }, updatedStudentData, {
     new: true,
   });
   return result;
@@ -138,8 +132,8 @@ const deleteAdmin = async (id: string): Promise<IAdmin | null> => {
 };
 
 export const AdminService = {
-  getAllAdmins,
   getSingleAdmin,
+  getAllAdmins,
   updateAdmin,
   deleteAdmin,
 };

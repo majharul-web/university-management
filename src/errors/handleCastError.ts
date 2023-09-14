@@ -1,8 +1,7 @@
+import mongoose from 'mongoose';
 import { IGenericErrorMessage } from '../interfaces/error';
-import { IGenericErrorResponse } from '../interfaces/common';
-import { CastError } from 'mongoose';
 
-const handleCastError = (error: CastError): IGenericErrorResponse => {
+const handleCastError = (error: mongoose.Error.CastError) => {
   const errors: IGenericErrorMessage[] = [
     {
       path: error.path,
@@ -11,7 +10,6 @@ const handleCastError = (error: CastError): IGenericErrorResponse => {
   ];
 
   const statusCode = 400;
-
   return {
     statusCode,
     message: 'Cast Error',

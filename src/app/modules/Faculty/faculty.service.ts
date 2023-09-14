@@ -1,26 +1,37 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { SortOrder } from 'mongoose';
+/* eslint-dgetAllFacultiesisable @typescript-eslint/no-explicit-any */
+import mongoose, { SortOrder } from 'mongoose';
+import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
+
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
+import { User } from '../user/user.model';
+import { facultySearchableFields } from './faculty.constant';
 import { IFaculty, IFacultyFilters } from './faculty.interface';
 import { Faculty } from './faculty.model';
-import { paginationHelper } from '../../../helpers/paginationHelper';
-import { facultySearchableFields } from './faculty.constant';
-import mongoose from 'mongoose';
-import { User } from '../User/user.model';
+
+const getSingleFaculty = async (id: string): Promise<IFaculty | null> => {
+  const result = await Faculty.findOne({ id })
+    .populate('academicDepartment')
+    .populate('academicFaculty');
+
+  return result;
+};
 
 const getAllFaculties = async (
   filters: IFacultyFilters,
   paginationOptions: IPaginationOptions
 ): Promise<IGenericResponse<IFaculty[]>> => {
+  // Extract searchTerm to implement search query
   const { searchTerm, ...filtersData } = filters;
   const { page, limit, skip, sortBy, sortOrder } =
-    paginationHelper.calculatePagination(paginationOptions);
+    paginationHelpers.calculatePagination(paginationOptions);
 
   const andConditions = [];
 
+  // Search needs $or for searching in specified fields
   if (searchTerm) {
     andConditions.push({
       $or: facultySearchableFields.map(field => ({
@@ -31,7 +42,7 @@ const getAllFaculties = async (
       })),
     });
   }
-
+  // Filters needs $and to fullfill all the conditions
   if (Object.keys(filtersData).length) {
     andConditions.push({
       $and: Object.entries(filtersData).map(([field, value]) => ({
@@ -40,8 +51,8 @@ const getAllFaculties = async (
     });
   }
 
+  // Dynamic  Sort needs  field to  do sorting
   const sortConditions: { [key: string]: SortOrder } = {};
-
   if (sortBy && sortOrder) {
     sortConditions[sortBy] = sortOrder;
   }
@@ -67,13 +78,6 @@ const getAllFaculties = async (
   };
 };
 
-const getSingleFaculty = async (id: string): Promise<IFaculty | null> => {
-  const result = await Faculty.findOne({ id })
-    .populate('academicDepartment')
-    .populate('academicFaculty');
-  return result;
-};
-
 const updateFaculty = async (
   id: string,
   payload: Partial<IFaculty>
@@ -84,22 +88,12 @@ const updateFaculty = async (
     throw new ApiError(httpStatus.NOT_FOUND, 'Faculty not found !');
   }
 
-  const { name, ...facultyData } = payload;
-
-  const updatedFacultyData: Partial<IFaculty> = { ...facultyData };
-
-  /* const name ={
-    fisrtName: 'Mezba',  <----- update korar jnno
-    middleName:'Abedin',
-    lastName: 'Forhan'
-  }
-*/
-
-  // dynamically handling
+  const { name, ...FacultyData } = payload;
+  const updatedFacultyData: Partial<IFaculty> = { ...FacultyData };
 
   if (name && Object.keys(name).length > 0) {
     Object.keys(name).forEach(key => {
-      const nameKey = `name.${key}` as keyof Partial<IFaculty>; // `name.fisrtName`
+      const nameKey = `name.${key}` as keyof Partial<IFaculty>;
       (updatedFacultyData as any)[nameKey] = name[key as keyof typeof name];
     });
   }
@@ -140,8 +134,8 @@ const deleteFaculty = async (id: string): Promise<IFaculty | null> => {
 };
 
 export const FacultyService = {
-  getAllFaculties,
   getSingleFaculty,
+  getAllFaculties,
   updateFaculty,
   deleteFaculty,
 };

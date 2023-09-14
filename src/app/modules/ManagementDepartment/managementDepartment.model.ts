@@ -1,10 +1,13 @@
 import { Schema, model } from 'mongoose';
 import {
-  ManagementDepartmentModel,
   IManagementDepartment,
-} from './managementDepartment.interface';
+  ManagementDepartmentModel,
+} from './managementDepartment.inerface';
 
-const ManagementDepartmentSchema = new Schema<IManagementDepartment>(
+const ManagementDepartmentSchema = new Schema<
+  IManagementDepartment,
+  ManagementDepartmentModel
+>(
   {
     title: {
       type: String,

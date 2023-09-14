@@ -1,13 +1,13 @@
 import { SortOrder } from 'mongoose';
-import { paginationHelper } from '../../../helpers/paginationHelper';
+import { paginationHelpers } from '../../../helpers/paginationHelper';
+import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
+import { managementDepartmentSearchableFields } from './managementDepartment.constant';
 import {
   IManagementDepartment,
   IManagementDepartmentFilters,
-} from './managementDepartment.interface';
+} from './managementDepartment.inerface';
 import { ManagementDepartment } from './managementDepartment.model';
-import { managementDepartmentSearchableFields } from './managementDepartment.constant';
-import { IGenericResponse } from '../../../interfaces/common';
 
 const createDepartment = async (
   payload: IManagementDepartment
@@ -16,22 +16,35 @@ const createDepartment = async (
   return result;
 };
 
+const getSingleDepartment = async (
+  id: string
+): Promise<IManagementDepartment | null> => {
+  const result = await ManagementDepartment.findById(id);
+  return result;
+};
+
 const getAllDepartments = async (
-  filterOptions: IManagementDepartmentFilters,
+  filters: IManagementDepartmentFilters,
   paginationOptions: IPaginationOptions
-): Promise<IGenericResponse<IManagementDepartment[] | null>> => {
-  const { searchTerm, ...filtersData } = filterOptions;
+): Promise<IGenericResponse<IManagementDepartment[]>> => {
+  // Extract searchTerm to implement search query
+  const { searchTerm, ...filtersData } = filters;
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelpers.calculatePagination(paginationOptions);
 
   const andConditions = [];
-
+  // Search needs $or for searching in specified fields
   if (searchTerm) {
     andConditions.push({
       $or: managementDepartmentSearchableFields.map(field => ({
-        [field]: { $regex: searchTerm, $options: 'i' },
+        [field]: {
+          $regex: searchTerm,
+          $options: 'i',
+        },
       })),
     });
   }
-
+  // Filters needs $and to fullfill all the conditions
   if (Object.keys(filtersData).length) {
     andConditions.push({
       $and: Object.entries(filtersData).map(([field, value]) => ({
@@ -40,37 +53,29 @@ const getAllDepartments = async (
     });
   }
 
-  const { page, limit, skip, sortBy, sortOrder } =
-    paginationHelper.calculatePagination(paginationOptions);
-
+  // Dynamic  Sort needs  field to  do sorting
   const sortConditions: { [key: string]: SortOrder } = {};
-
   if (sortBy && sortOrder) {
     sortConditions[sortBy] = sortOrder;
   }
-
-  const whereConditions = andConditions.length ? { $and: andConditions } : {};
+  const whereConditions =
+    andConditions.length > 0 ? { $and: andConditions } : {};
 
   const result = await ManagementDepartment.find(whereConditions)
     .sort(sortConditions)
     .skip(skip)
     .limit(limit);
-  const total = await ManagementDepartment.countDocuments(whereConditions);
+
+  const total = await ManagementDepartment.countDocuments();
+
   return {
     meta: {
-      total,
       page,
       limit,
+      total,
     },
     data: result,
   };
-};
-
-const getSingleDepartment = async (
-  id: string
-): Promise<IManagementDepartment | null> => {
-  const result = await ManagementDepartment.findById(id);
-  return result;
 };
 
 const updateDepartment = async (
@@ -95,9 +100,9 @@ const deleteDepartment = async (
 };
 
 export const ManagementDepartmentService = {
+  createDepartment,
   getAllDepartments,
   getSingleDepartment,
   updateDepartment,
   deleteDepartment,
-  createDepartment,
 };

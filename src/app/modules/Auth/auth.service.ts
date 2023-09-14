@@ -1,86 +1,89 @@
-import { jwtHelper } from './../../../helpers/jwtHelper';
 import httpStatus from 'http-status';
+import { JwtPayload, Secret } from 'jsonwebtoken';
+import config from '../../../config';
 import ApiError from '../../../errors/ApiError';
-import { User } from '../User/user.model';
+import { jwtHelpers } from '../../../helpers/jwtHelpers';
+import { User } from '../user/user.model';
 import {
   IChangePassword,
   ILoginUser,
   ILoginUserResponse,
   IRefreshTokenResponse,
 } from './auth.interface';
-import { JwtPayload, Secret } from 'jsonwebtoken';
-import config from '../../../config';
-import bcrypt from 'bcrypt';
 
-const userLogin = async (payload: ILoginUser): Promise<ILoginUserResponse> => {
+const loginUser = async (payload: ILoginUser): Promise<ILoginUserResponse> => {
   const { id, password } = payload;
-  // create instance of user model
+  // creating instance of User
   // const user = new User();
+  //  // access to our instance methods
+  //   const isUserExist = await user.isUserExist(id);
 
-  // check user is exist
   const isUserExist = await User.isUserExist(id);
 
   if (!isUserExist) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    throw new ApiError(httpStatus.NOT_FOUND, 'User does not exist');
   }
 
-  // check password is match
   if (
     isUserExist.password &&
-    !(await User.isPasswordMatched(password, isUserExist?.password))
+    !(await User.isPasswordMatched(password, isUserExist.password))
   ) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Password not match');
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Password is incorrect');
   }
 
-  // create access token
-  const accessToken = jwtHelper.createToken(
-    { id: isUserExist.id, role: isUserExist.role },
+  //create access token & refresh token
+
+  const { id: userId, role, needsPasswordChange } = isUserExist;
+  const accessToken = jwtHelpers.createToken(
+    { userId, role },
     config.jwt.secret as Secret,
-    {
-      expiresIn: config.jwt.access_expires_in,
-    }
+    config.jwt.expires_in as string
   );
-  // create refresh token
-  const refreshToken = jwtHelper.createToken(
-    { id: isUserExist.id, role: isUserExist.role },
+
+  const refreshToken = jwtHelpers.createToken(
+    { userId, role },
     config.jwt.refresh_secret as Secret,
-    {
-      expiresIn: config.jwt.refresh_expires_in,
-    }
+    config.jwt.refresh_expires_in as string
   );
 
   return {
     accessToken,
     refreshToken,
-    needsPasswordChange: isUserExist.needsPasswordChange,
+    needsPasswordChange,
   };
 };
 
 const refreshToken = async (token: string): Promise<IRefreshTokenResponse> => {
-  let verifiedToken;
+  //verify token
+  // invalid token - synchronous
+  let verifiedToken = null;
   try {
-    verifiedToken = jwtHelper.verifyToken(
+    verifiedToken = jwtHelpers.verifyToken(
       token,
       config.jwt.refresh_secret as Secret
     );
-  } catch (error) {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Invalid refresh token');
+  } catch (err) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Invalid Refresh Token');
   }
 
-  const { id } = verifiedToken;
+  const { userId } = verifiedToken;
 
-  const isUserExist = await User.isUserExist(id);
+  // tumi delete hye gso  kintu tumar refresh token ase
+  // checking deleted user's refresh token
+
+  const isUserExist = await User.isUserExist(userId);
   if (!isUserExist) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    throw new ApiError(httpStatus.NOT_FOUND, 'User does not exist');
   }
+  //generate new token
 
-  // create refresh token
-  const newAccessToken = jwtHelper.createToken(
-    { id: isUserExist.id, role: isUserExist.role },
-    config.jwt.secret as Secret,
+  const newAccessToken = jwtHelpers.createToken(
     {
-      expiresIn: config.jwt.access_expires_in,
-    }
+      id: isUserExist.id,
+      role: isUserExist.role,
+    },
+    config.jwt.secret as Secret,
+    config.jwt.expires_in as string
   );
 
   return {
@@ -88,69 +91,56 @@ const refreshToken = async (token: string): Promise<IRefreshTokenResponse> => {
   };
 };
 
-const changePasswordalt = async (
-  user: JwtPayload | null,
-  passwordData: IChangePassword
-): Promise<void> => {
-  const { oldPassword, newPassword } = passwordData;
-  // check user is exist
-  const isUserExist = await User.isUserExist(user?.id);
-
-  if (!isUserExist) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-  }
-
-  // check old password is match
-  if (
-    isUserExist.password &&
-    !(await User.isPasswordMatched(oldPassword, isUserExist?.password))
-  ) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Old password not match');
-  }
-
-  // password hash before update
-  const hashesPassword = await bcrypt.hash(
-    newPassword,
-    Number(config.bycrypt_salt_rounds)
-  );
-
-  // update password
-  const updatedData = {
-    password: hashesPassword,
-    needsPasswordChange: false,
-    passwordChangedAt: new Date(),
-  };
-  await User.findOneAndUpdate({ id: user?.id }, updatedData);
-};
 const changePassword = async (
   user: JwtPayload | null,
-  passwordData: IChangePassword
+  payload: IChangePassword
 ): Promise<void> => {
-  const { oldPassword } = passwordData;
-  // check user is exist
-  const isUserExist = await User.findOne({ id: user?.id }).select('+password');
+  const { oldPassword, newPassword } = payload;
+
+  // // checking is user exist
+  // const isUserExist = await User.isUserExist(user?.userId);
+
+  //alternative way
+  const isUserExist = await User.findOne({ id: user?.userId }).select(
+    '+password'
+  );
 
   if (!isUserExist) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    throw new ApiError(httpStatus.NOT_FOUND, 'User does not exist');
   }
 
-  // check old password is match
+  // checking old password
   if (
     isUserExist.password &&
-    !(await User.isPasswordMatched(oldPassword, isUserExist?.password))
+    !(await User.isPasswordMatched(oldPassword, isUserExist.password))
   ) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Old password not match');
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Old Password is incorrect');
   }
 
-  // update using save method
+  // // hash password before saving
+  // const newHashedPassword = await bcrypt.hash(
+  //   newPassword,
+  //   Number(config.bycrypt_salt_rounds)
+  // );
+
+  // const query = { id: user?.userId };
+  // const updatedData = {
+  //   password: newHashedPassword,  //
+  //   needsPasswordChange: false,
+  //   passwordChangedAt: new Date(), //
+  // };
+
+  // await User.findOneAndUpdate(query, updatedData);
+  // data update
+  isUserExist.password = newPassword;
   isUserExist.needsPasswordChange = false;
 
+  // updating using save()
   isUserExist.save();
 };
 
 export const AuthService = {
-  userLogin,
+  loginUser,
   refreshToken,
   changePassword,
-  changePasswordalt,
 };

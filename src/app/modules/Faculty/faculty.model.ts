@@ -1,8 +1,7 @@
-import { Schema, model } from 'mongoose';
-import { bloodGroup, gender } from './faculty.constant';
-import { IFaculty, FacultyModel } from './faculty.interface';
+import { Schema, Types, model } from 'mongoose';
+import { FacultyModel, IFaculty } from './faculty.interface';
 
-export const FacultySchema = new Schema<IFaculty, FacultyModel>(
+const FacultySchema = new Schema<IFaculty, FacultyModel>(
   {
     id: {
       type: String,
@@ -26,12 +25,16 @@ export const FacultySchema = new Schema<IFaculty, FacultyModel>(
       },
       required: true,
     },
-    gender: {
-      type: String,
-      enum: gender,
-    },
     dateOfBirth: {
       type: String,
+    },
+    gender: {
+      type: String,
+      enum: ['male', 'female'],
+    },
+    bloodGroup: {
+      type: String,
+      enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
     },
     email: {
       type: String,
@@ -47,10 +50,6 @@ export const FacultySchema = new Schema<IFaculty, FacultyModel>(
       type: String,
       required: true,
     },
-    bloodGroup: {
-      type: String,
-      enum: bloodGroup,
-    },
     presentAddress: {
       type: String,
       required: true,
@@ -59,13 +58,8 @@ export const FacultySchema = new Schema<IFaculty, FacultyModel>(
       type: String,
       required: true,
     },
-    academicFaculty: {
-      type: Schema.Types.ObjectId,
-      ref: 'AcademicFaculty',
-      required: true,
-    },
     academicDepartment: {
-      type: Schema.Types.ObjectId,
+      type: Types.ObjectId,
       ref: 'AcademicDepartment',
       required: true,
     },
@@ -77,12 +71,14 @@ export const FacultySchema = new Schema<IFaculty, FacultyModel>(
       type: String,
       // required: true,
     },
+    academicFaculty: {
+      type: Types.ObjectId,
+      ref: 'AcademicFaculty',
+      required: true,
+    },
   },
   {
     timestamps: true,
-    toJSON: {
-      virtuals: true,
-    },
   }
 );
 

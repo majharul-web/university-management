@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
-import ApiError from '../../errors/ApiError';
-import { jwtHelper } from '../../helpers/jwtHelper';
 import httpStatus from 'http-status';
-import config from '../../config';
 import { Secret } from 'jsonwebtoken';
+import config from '../../config';
+import ApiError from '../../errors/ApiError';
+import { jwtHelpers } from '../../helpers/jwtHelpers';
 
 const auth =
   (...requiredRoles: string[]) =>
@@ -17,9 +17,9 @@ const auth =
       // verify token
       let verifiedUser = null;
 
-      verifiedUser = jwtHelper.verifyToken(token, config.jwt.secret as Secret);
+      verifiedUser = jwtHelpers.verifyToken(token, config.jwt.secret as Secret);
 
-      req.user = verifiedUser; // role , userid
+      req.user = verifiedUser; // role  , userid
 
       // role diye guard korar jnno
       if (requiredRoles.length && !requiredRoles.includes(verifiedUser.role)) {

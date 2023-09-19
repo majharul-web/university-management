@@ -21,11 +21,11 @@ export const generateStudentId = async (
   academicSemester: IAcademicSemester
 ): Promise<string> => {
   const currentId =
-    (await findLastStudentId()) || (0).toString().padStart(5, '0'); //00000
-  //increment by 1
+    (await findLastStudentId()) || (0).toString().padStart(5, '0'); // '00000'
+  // increment by 1
   let incrementedId = (parseInt(currentId) + 1).toString().padStart(5, '0');
-  //20 25
-  incrementedId = `${academicSemester.year.substring(2)}${
+  // '20' '25'
+  incrementedId = `${String(academicSemester.year).substring(2)}${
     academicSemester.code
   }${incrementedId}`;
 

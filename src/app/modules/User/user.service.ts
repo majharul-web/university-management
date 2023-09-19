@@ -17,6 +17,8 @@ import {
   generateFacultyId,
   generateStudentId,
 } from './user.utils';
+import { RedisClient } from '../../../shared/redis';
+import { EVENT_STUDENT_CREATED } from './user.constant';
 
 const createStudent = async (
   student: IStudent,
@@ -85,6 +87,12 @@ const createStudent = async (
     });
   }
 
+  if (newUserAllData) {
+    await RedisClient.publish(
+      EVENT_STUDENT_CREATED,
+      JSON.stringify(newUserAllData.student)
+    );
+  }
   return newUserAllData;
 };
 

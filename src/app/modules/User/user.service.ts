@@ -18,7 +18,11 @@ import {
   generateStudentId,
 } from './user.utils';
 import { RedisClient } from '../../../shared/redis';
-import { EVENT_STUDENT_CREATED } from './user.constant';
+import {
+  EVENT_ADMIN_CREATED,
+  EVENT_FACULTY_CREATED,
+  EVENT_STUDENT_CREATED,
+} from './user.constant';
 
 const createStudent = async (
   student: IStudent,
@@ -155,6 +159,13 @@ const createFaculty = async (
     });
   }
 
+  if (newUserAllData) {
+    await RedisClient.publish(
+      EVENT_FACULTY_CREATED,
+      JSON.stringify(newUserAllData.faculty)
+    );
+  }
+
   return newUserAllData;
 };
 
@@ -210,6 +221,13 @@ const createAdmin = async (
         },
       ],
     });
+  }
+
+  if (newUserAllData) {
+    await RedisClient.publish(
+      EVENT_ADMIN_CREATED,
+      JSON.stringify(newUserAllData.admin)
+    );
   }
 
   return newUserAllData;

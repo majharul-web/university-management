@@ -8,7 +8,7 @@ import { AuthService } from './auth.service';
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const { ...loginData } = req.body;
   const result = await AuthService.loginUser(loginData);
-  const { refreshToken, ...others } = result;
+  const { refreshToken } = result;
 
   // set refresh token into cookie
   const cookieOptions = {
@@ -22,7 +22,7 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
     statusCode: 200,
     success: true,
     message: 'User logged in successfully !',
-    data: others,
+    data: result,
   });
 });
 
